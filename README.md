@@ -14,9 +14,9 @@ CLIP-DINOiser: Teaching CLIP a few DINO tricks<br>
 
 
 <p></p>
-<a href="https://arxiv.org/pdf/2309.14289.pdf"><img
+<a href=""><img
 src="https://img.shields.io/badge/-Paper-blue.svg?colorA=333&logo=arxiv" height=35em></a>
-<a href="https://wysoczanska.github.io"><img 
+<a href="https://wysoczanska.github.io/CLIP_DINOiser"><img 
 src="https://img.shields.io/badge/-Webpage-blue.svg?colorA=333&logo=html5" height=35em></a>
 <a href="https://wysoczanska.github.io"><img 
 src="https://img.shields.io/badge/-Demo-blue.svg?colorA=333&logo=googlecolab" height=35em></a>
