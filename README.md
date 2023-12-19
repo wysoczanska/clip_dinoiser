@@ -24,7 +24,8 @@ src="https://img.shields.io/badge/-Demo-blue.svg?colorA=333&logo=googlecolab" he
 
 ![teaser.png](./assets/teaser.png)
 
-https://github.com/wysoczanska/multimodal-od/assets/18114410/0675d3c2-8e6e-4a01-a678-b53dcf17d539
+
+https://github.com/wysoczanska/clip_dinoiser/assets/18114410/2a80e9c1-35b2-4f13-94a7-4946a4e11120
 </h2>
 </div>
 
