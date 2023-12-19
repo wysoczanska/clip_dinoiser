@@ -1,0 +1,51 @@
+_base_: "default.yml"
+
+defaults:
+  - _self_
+
+model:
+  type: MaskClip
+  clip_model: CLIP-ViT-B-16-laion2B-s34B-b88K
+  backbone:
+    img_size: 448
+    patch_size: 16
+    patch_bias: False
+    in_channels: 3
+    embed_dims: 768
+    num_layers: 12
+    num_heads: 12
+    mlp_ratio: 4
+    out_indices: -1
+    qkv_bias: True
+    drop_rate: 0.0
+    attn_drop_rate: 0.0
+    drop_path_rate: 0.0
+    with_cls_token: True
+    output_cls_token: False
+    norm_cfg:
+      type: 'LN'
+      eps: 1e-6
+    act_cfg:
+      type: 'GELU'
+    patch_norm: False
+    pre_norm: True
+    final_norm: True
+    return_qkv: True
+    interpolate_mode: 'bicubic'
+    num_fcs: 2
+    norm_eval: False
+    pretrained: 'checkpoints/ViT-16-laion_clip_backbone.pth'
+
+  decode_head:
+    type: MaskClipHead
+    in_channels: 768
+    channels: 0
+    text_channels: 512
+    in_index: -1
+    norm_cfg:
+      type: 'SyncBN'
+      requires_grad: False
+    align_corners: False
+    visual_projs_path: 'checkpoints/ViT-16-laion_clip_proj.pth'
+    model_prefix: 'hf-hub:laion'
+    use_templates: True

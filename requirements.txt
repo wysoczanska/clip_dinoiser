@@ -1,0 +1,4 @@
+ftfy
+omegaconf
+open_clip_torch
+hydra-core

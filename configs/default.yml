@@ -1,0 +1,5 @@
+
+model_name: "default"  # display name in the logger
+tag: default
+print_freq: 20
+seed: 0
