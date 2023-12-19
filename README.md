@@ -33,10 +33,10 @@ Official PyTorch implementation of [**CLIP-DINOiser: Teaching CLIP a few DINO tr
 
 ```
 @article{wysoczanska2023clipdino,
-  title={CLIP-DINOiser: Teaching CLIP a few DINO tricks},
-  author={Wysocza{\'n}ska, Monika and Sim{\'e}oni, Oriane and Ramamonjisoa, Micha{\"e}l and Andrei Bursuc and Trzci{\'n}ski, Tomasz and Patrick Perez},
-  booktitle={arxiv},
-  year={2023}
+        title={CLIP-DINOiser: Teaching CLIP a few DINO tricks},
+        author={Wysocza{\'n}ska, Monika and Sim{\'e}oni, Oriane and Ramamonjisoa, Micha{\"e}l and Bursuc, Andrei and Trzci{\'n}ski, Tomasz and P{\'e}rez, Patrick},
+        journal={arxiv},
+        year={2023}
 }
 ```
 
