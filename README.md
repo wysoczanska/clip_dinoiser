@@ -14,11 +14,11 @@ CLIP-DINOiser: Teaching CLIP a few DINO tricks<br>
 
 
 <p></p>
-<a href=""><img
+<a href="https://arxiv.org/abs/2312.12359"><img
 src="https://img.shields.io/badge/-Paper-blue.svg?colorA=333&logo=arxiv" height=35em></a>
-<a href="https://arxiv.org/abs/2312.12359"><img 
-src="https://img.shields.io/badge/-Webpage-blue.svg?colorA=333&logo=html5" height=35em></a>
 <a href="https://wysoczanska.github.io/CLIP_DINOiser/"><img 
+src="https://img.shields.io/badge/-Webpage-blue.svg?colorA=333&logo=html5" height=35em></a>
+<a href=""><img 
 src="https://img.shields.io/badge/-Demo-blue.svg?colorA=333&logo=googlecolab" height=35em></a>
 <p></p>
 
