@@ -141,7 +141,8 @@ def run_val(model, loader, eval_key, logger, cfg):
 
 
 def main(cfg):
-    out_path = cfg.get('output', os.getcwd())
+    out_path = cfg.get('output')
+    if out_path == "": out_path = os.getcwd()
     os.makedirs(out_path, exist_ok=True)
     dset_path = cfg.train.get('data')  # Imagenet root
     train_folder = os.path.join(dset_path, 'train')

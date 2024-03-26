@@ -103,7 +103,6 @@ def main(cfg):
     set_random_seed(cfg.seed, use_rank_shift=True)
     cudnn.benchmark = True
 
-    os.makedirs(cfg.output, exist_ok=True)
     logger = get_logger(cfg)
 
     val_loaders = {}
