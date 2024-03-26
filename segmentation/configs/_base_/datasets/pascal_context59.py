@@ -1,10 +1,4 @@
-# ---------------------------------------------------------------------------------------------------
-# CLIP-DINOiser
-# authors: Monika Wysoczanska, Warsaw University of Technology
-# ----------------------------------------------------------------------------------------------------
-# Modified from TCL
-# Copyright (c) 2023 Kakao Brain. All Rights Reserved.
-# ------------------------------------------------------------------------------
+_base_ = ["../custom_import.py"]
 # dataset settings
 dataset_type = "PascalContextDataset59"
 data_root = "./data/VOCdevkit/VOC2010"
@@ -18,6 +12,7 @@ test_pipeline = [
         transforms=[
             dict(type="Resize", keep_ratio=True),
             dict(type="RandomFlip"),
+            # dict(type='Normalize', **img_norm_cfg),
             dict(type="ImageToTensorV2", keys=["img"]),
             dict(type="Collect", keys=["img"],
                  meta_keys=['ori_shape', 'img_shape', 'pad_shape', 'flip', 'img_info']),
@@ -36,3 +31,4 @@ data = dict(
 )
 
 test_cfg = dict(mode="slide", stride=(224, 224), crop_size=(448, 448))
+# test_cfg = dict(mode="whole")

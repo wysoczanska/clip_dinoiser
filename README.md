@@ -1,6 +1,6 @@
 <div align="center">
 <h2>
-CLIP-DINOiser: Teaching CLIP a few DINO tricks<br>
+CLIP-DINOiser: Teaching CLIP a few DINO tricks for Open-Vocabulary Semantic Segmentation <br>
 <p></p>
 
 <p></p>
@@ -39,6 +39,14 @@ Official PyTorch implementation of [**CLIP-DINOiser: Teaching CLIP a few DINO tr
 }
 ```
 
+<details>
+<summary><span style="font-weight: bold;">Updates</span></summary>
+<ul>
+  <li><b>[27/03/2023]</b> Training code out. Updated weights to the ImageNet trained. Modified MaskCLIP code to directly load weights from OpenCLIP model.</li>
+  <li><b>[20/12/2023]</b> Code release</li>
+</ul>
+</details><br>
+
 ## Demo
 Try our model! 
 ### Requirements
@@ -60,16 +68,6 @@ mim install "mmcv-full==1.6.0"
 mim install "mmsegmentation==0.27.0
 ```
 
-Convert the CLIP weights following MaskCLIP preparation.
-
-```
-python tools/convert_clip_weights.py
-```
-As the result, you should see 2 files created in the ```checkpoints``` directory, precisely:
-```
-ViT-16-laion_clip_backbone.pth
-ViT-16-laion_clip_proj.pth
-```
 ### Running from the notebook
 You can try our model through jupyter notebook ```demo.ipynb```.
 ![img.png](assets/demo.png)
@@ -99,7 +97,6 @@ COCO-Object dataset uses only object classes from COCO-Stuff164k dataset by coll
 
 ```
 python tools/convert_coco.py data/coco_stuff164k/ -o data/coco_stuff164k/
-
 ```
 ### Running evaluation
 
@@ -112,8 +109,33 @@ torchrun main_eval.py clip_dinoiser.yaml
 or using multiple GPUs:
 
 ```
-CUDA_VISIBLE_DEVICES=[0,1..] torchrun --rdzv_endpoint=localhost:12345 --nproc_per_node=auto main_eval.py clip_dinoiser.yaml
+CUDA_VISIBLE_DEVICES=[0,1..] torchrun --nproc_per_node=auto main_eval.py clip_dinoiser.yaml
 ```
+
+## Training
+**Hardware Requirements**: you'll need one gpu (~14GB) to run the training. Using NVIDIA GPU A5000 training takes approximately 3 hours.  
+
+### Dataset preparation
+Download [ImageNet](https://www.image-net.org/download.php) and update the ImageNet folder path in the ```configs/clip_dinoiser.yaml``` file.
+
+### Install FOUND
+Install FOUND by running:
+```
+cd models;
+git clone git@github.com:valeoai/FOUND.git
+cd FOUND;
+git clone https://github.com/facebookresearch/dino.git
+cd dino; 
+touch __init__.py
+echo -e "import sys\nfrom os.path import dirname, join\nsys.path.insert(0, join(dirname(__file__), '.'))" >> __init__.py; cd ../;
+```
+
+### Run training
+To run the training simply run:
+```
+CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=auto train.py clip_dinoiser.yaml
+```
+Currently, we only support single gpu training. However, the evaluation (which is automatically run after the training finishes) can still be speed up with multiple gpu process.
 
 ## Acknowledgments
 This repo heavily relies on the following projects: 

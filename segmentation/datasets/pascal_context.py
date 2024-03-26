@@ -1,12 +1,6 @@
-# ---------------------------------------------------------------------------------------------------
-# CLIP-DINOiser
-# authors: Monika Wysoczanska, Warsaw University of Technology
-# ----------------------------------------------------------------------------------------------------
-# from MaskCLIP
-# Copyright (c) OpenMMLab. All rights reserved.
-# ------------------------------------------------------------------------------
-from mmseg.datasets import DATASETS, CustomDataset
 import os.path as osp
+
+from mmseg.datasets import DATASETS, CustomDataset
 
 
 @DATASETS.register_module(force=True)

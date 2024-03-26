@@ -3,7 +3,6 @@ import os.path as osp
 import shutil
 from functools import partial
 from glob import glob
-
 import mmcv
 import numpy as np
 from PIL import Image
@@ -185,12 +184,6 @@ clsID_to_trID = {
     255: 255
 }
 
-# set to background
-for k, v in clsID_to_trID.items():
-    clsID_to_trID[k] = v + 1
-    if k > 90:
-        clsID_to_trID[k] = 0
-
 
 def convert_to_trainID(maskpath, out_mask_dir, is_train):
     mask = np.array(Image.open(maskpath))
@@ -200,16 +193,16 @@ def convert_to_trainID(maskpath, out_mask_dir, is_train):
     seg_filename = osp.join(
         out_mask_dir, 'train2017',
         osp.basename(maskpath).split('.')[0] +
-        '_instanceTrainIds.png') if is_train else osp.join(
+        '_labelTrainIds.png') if is_train else osp.join(
             out_mask_dir, 'val2017',
-            osp.basename(maskpath).split('.')[0] + '_instanceTrainIds.png')
+            osp.basename(maskpath).split('.')[0] + '_labelTrainIds.png')
     Image.fromarray(mask_copy).save(seg_filename, 'PNG')
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description=\
-        'Convert COCO Stuff 164k annotations to COCO Objects')  # noqa
+        'Convert COCO Stuff 164k annotations to mmsegmentation format')  # noqa
     parser.add_argument('coco_path', help='coco stuff path')
     parser.add_argument('-o', '--out_dir', help='output path')
     parser.add_argument(
@@ -234,11 +227,10 @@ def main():
         shutil.copytree(osp.join(coco_path, 'images'), out_img_dir)
 
     train_list = glob(osp.join(coco_path, 'annotations', 'train2017', '*.png'))
-    train_list = [file for file in train_list if 'TrainIds' not in file]
+    train_list = [file for file in train_list if '_labelTrainIds' not in file]
     test_list = glob(osp.join(coco_path, 'annotations', 'val2017', '*.png'))
-    test_list = [file for file in test_list if 'TrainIds' not in file]
-    assert (len(train_list) +
-            len(test_list)) == COCO_LEN, 'Wrong length of list {} & {}'.format(
+    test_list = [file for file in test_list if '_labelTrainIds' not in file]
+    assert (len(train_list) + len(test_list)) == COCO_LEN, 'Wrong length of list {} & {}'.format(
                 len(train_list), len(test_list))
 
     if args.nproc > 1:

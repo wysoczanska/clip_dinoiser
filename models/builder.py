@@ -1,11 +1,5 @@
-# ------------------------------------------------------------------------------
-# CLIP-DINOiser
-# author: Monika Wysoczanska
-# ------------------------------------------------------------------------------
-# Modified from GroupViT (https://github.com/NVlabs/GroupViT)
-# Copyright (c) 2021-22, NVIDIA Corporation & affiliates. All Rights Reserved.
-# ------------------------------------------------------------------------------
 from mmcv.utils import Registry
+
 MODELS = Registry('models')
 from omegaconf import OmegaConf
 

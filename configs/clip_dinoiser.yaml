@@ -3,28 +3,42 @@ defaults:
   - _self_
 
 seed: 0
-model_name: clip_dinoiser
+model_name: CLIP_DINOiser
 model:
   type: CLIP_DINOiser
   clip_backbone: maskclip
-  mask_th: 0.2
+  vit_arch: vit_base
+  vit_patch_size: 16
+  enc_type_feats: "v"
+  gamma: 0.2
   in_dim: 256
-  certainty_th: 0.9
-  found_th: 0.5
+  delta: 0.99
   feats_idx: -3
 
-checkpoint_path: "checkpoints/last.pt"
-output: logs
+train:
+  batch_size: 16
+  corr_lr: 0.00005
+  found_lr: 0.01
+  num_workers: 4
+  epochs: 100
+  milestones:
+    - 5000
+  step_lr_gamma: 0.1
+  data: "/home/data/imagenet" # CHANGE to your ImageNet data folder
+  loss: CE
+  ds_size: 1000
+  im_size: 448
+output: "" # CHANGE to your results folder
 
 evaluate:
   eval_only: true
   task:
     - voc
-    - voc20
     - context
-    - context59
-    - coco_stuff
     - coco_object
+    - context59
+    - voc20
+    - coco_stuff
     - cityscapes
     - ade20k
 

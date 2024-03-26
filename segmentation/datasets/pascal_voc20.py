@@ -1,14 +1,8 @@
-# ---------------------------------------------------------------------------------------------------
-# CLIP-DINOiser
-# authors: Monika Wysoczanska, Warsaw University of Technology
-# ----------------------------------------------------------------------------------------------------
-# Modified from TCL
-# Copyright (c) 2023 Kakao Brain. All Rights Reserved.
 # ------------------------------------------------------------------------------
-
 import os.path as osp
-from mmseg.datasets import DATASETS
+
 from mmseg.datasets import CustomDataset
+from mmseg.datasets import DATASETS
 
 
 @DATASETS.register_module()
