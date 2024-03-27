@@ -22,7 +22,7 @@ src="https://img.shields.io/badge/-Webpage-blue.svg?colorA=333&logo=html5" heigh
 src="https://img.shields.io/badge/-Demo-blue.svg?colorA=333&logo=googlecolab" height=35em></a>
 <p></p>
 
-![teaser.png](./assets/teaser.png)
+![teaser_v2.png](./assets/teaser_v2.png)
 
 
 https://github.com/wysoczanska/clip_dinoiser/assets/18114410/2a80e9c1-35b2-4f13-94a7-4946a4e11120
