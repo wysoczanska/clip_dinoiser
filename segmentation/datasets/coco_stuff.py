@@ -1,8 +1,3 @@
-# ---------------------------------------------------------------------------------------------------
-# CLIP-DINOiser
-# authors: Monika Wysoczanska, Warsaw University of Technology
-
-
 from mmseg.datasets import DATASETS, CustomDataset
 
 

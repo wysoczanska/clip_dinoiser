@@ -1,13 +1,7 @@
-# ------------------------------------------------------------------------------
-# TCL
-# Copyright (c) 2023 Kakao Brain. All Rights Reserved.
-# ------------------------------------------------------------------------------
-# Modified from GroupViT (https://github.com/NVlabs/GroupViT)
-# Copyright (c) 2021-22, NVIDIA Corporation & affiliates. All Rights Reserved.
-# ------------------------------------------------------------------------------
 import os
-from mmseg.datasets import DATASETS
+
 from mmseg.datasets import CustomDataset
+from mmseg.datasets import DATASETS
 
 
 @DATASETS.register_module(force=True)

@@ -2,11 +2,12 @@
 # CLIP-DINOiser
 # authors: Monika Wysoczanska, Warsaw University of Technology
 # ----------------------------------------------------------------------------------------------------
-# Modified from TCL
-# Copyright (c) 2023 Kakao Brain. All Rights Reserved.
+# GroupViT (https://github.com/NVlabs/GroupViT)
+# Copyright (c) 2021-22, NVIDIA Corporation & affiliates. All Rights Reserved.
 # ------------------------------------------------------------------------------
-
 custom_imports = dict(
-    imports=["segmentation.datasets.coco_object", "segmentation.datasets.pascal_voc", "datasets.transforms", "segmentation.datasets.pascal_voc20"],
+    imports=["segmentation.datasets.coco_object", "segmentation.datasets.pascal_voc",
+             "segmentation.datasets.pascal_voc20",
+             ],
     allow_failed_imports=False,
 )

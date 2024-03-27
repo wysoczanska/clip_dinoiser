@@ -1,12 +1,4 @@
-# ---------------------------------------------------------------------------------------------------
-# CLIP-DINOiser
-# authors: Monika Wysoczanska, Warsaw University of Technology
-# ----------------------------------------------------------------------------------------------------
-# Modified from TCL
-# Copyright (c) 2023 Kakao Brain. All Rights Reserved.
-# ------------------------------------------------------------------------------
 _base_ = ["../custom_import.py"]
-# dataset settings
 dataset_type = "ADE20KDataset"
 data_root = "./data"
 
@@ -46,6 +38,13 @@ test_pipeline = [
     ),
 ]
 data = dict(
+    train=dict(
+        type=dataset_type,
+        data_root=data_root,
+        img_dir="ADEChallengeData2016/images/training",
+        ann_dir="ADEChallengeData2016/annotations/training",
+        pipeline=train_pipeline,
+    ),
     test=dict(
         type=dataset_type,
         data_root=data_root,

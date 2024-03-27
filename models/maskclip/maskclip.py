@@ -1,32 +1,23 @@
-# ------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------
 # CLIP-DINOiser
-# author: Monika Wysoczanska, Warsaw University of Technology
-# ------------------------------------------------------------------------------
-# Modified from OpenMMLab https://github.com/chongzhou96/MaskCLIP
-# ------------------------------------------------------------------------------
+# authors: Monika Wysoczanska, Warsaw University of Technology
+
+# Copyright (c) OpenMMLab. All rights reserved.
+# Modified version of the original MaskCLIP code: https://github.com/chongzhou96/MaskCLIP/tree/master
+# ---------------------------------------------------------------------------------------------------
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmseg.ops import resize
-from typing import Any, List
+from typing import List, Tuple
 from torch import Tensor
-from mmcv.utils import print_log
-from mmseg.utils import get_root_logger
 from open_clip import get_tokenizer,  create_model_from_pretrained
 from models.builder import MODELS
-from .vit import VisionTransformer
 import torchvision.transforms as T
-from .utils.embed import AdaptivePadding
 from .utils.prompt_templates import imagenet_templates
 
 OPENAI_NORMALIZE = T.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-
-
-def make_vision_transformer(backbone_cfg):
-    model = VisionTransformer(**backbone_cfg)
-    model.init_weights()
-    return model
 
 
 @MODELS.register_module()
@@ -41,60 +32,124 @@ class MaskClip(nn.Module):
         super(MaskClip, self).__init__()
 
         self.decode_head = eval(decode_head.get('type'))(clip_model, class_names, **decode_head)
-        self.backbone = make_vision_transformer(backbone)
-        self.clip_T = OPENAI_NORMALIZE
-
-        self.to_PIL = T.ToPILImage()
         self.patch_size = backbone.get('patch_size')
-        self.padding = AdaptivePadding(self.patch_size, self.patch_size)
+        self.img_size = tuple([backbone.get('img_size', 224)]*2)
+        pretrained = decode_head.get("pretrained")
+        model, _ = create_model_from_pretrained(clip_model, pretrained=pretrained)
+        model.eval()
+        self.clip_T = OPENAI_NORMALIZE
+        self.hook_features = {}
+        self.backbone = model
+        def hook_fn_forward(module, input, output):
+            self.hook_features["v"] = output
+        self.backbone.visual.transformer.resblocks[-2].register_forward_hook(hook_fn_forward)
+        self._positional_embd = nn.Parameter(self.backbone.visual.positional_embedding.data.clone())
 
-    def extract_feat(self, inputs: Tensor) -> List[Tensor]:
+    @torch.no_grad()
+    def extract_feat(self, inputs: Tensor) -> Tuple[Tensor]:
         """Extract features from images."""
-        x = self.backbone(inputs)
-        return x
+        pos_embed = self.backbone.visual.positional_embedding
+
+        B, C, H, W = inputs.shape
+        hw_shape = (H // self.patch_size, W // self.patch_size)
+        x_len, pos_len = hw_shape[0]*hw_shape[1], pos_embed.shape[0]
+
+        if x_len != pos_len:
+            if pos_len == (self.img_size[0] // self.patch_size) * (self.img_size[1] // self.patch_size) + 1:
+                pos_h = self.img_size[0] // self.patch_size
+                pos_w = self.img_size[1] // self.patch_size
+            else:
+                raise ValueError(
+                    '{}, {}'.format(x_len, pos_len))
+
+            self.backbone.visual.positional_embedding.data = self.resize_pos_embed(
+                self._positional_embd[None], hw_shape,  (pos_h, pos_w), 'bicubic')[0]
+
+        _ = self.backbone(inputs)
+        v = self.hook_features["v"]
+        v = self.extract_v(v, self.backbone.visual.transformer.resblocks[-1]).permute(1, 0, 2)
+        v = self.backbone.visual.ln_post(v)
+        v = v[:, 1:]
+        v = v.reshape(B, hw_shape[0], hw_shape[1], -1).permute(0, 3, 1, 2).contiguous()
+
+        self.backbone.visual.positional_embedding.data = self._positional_embd
+        return v
+
+    def extract_v(self, x, block):
+        y = block.ln_1(x)
+        y = torch.nn.functional.linear(y, block.attn.in_proj_weight, block.attn.in_proj_bias)
+        B, N, C = y.shape
+        y = y.view(B, N, 3, C // 3).permute(2, 0, 1, 3).reshape(3 * B, N, C // 3)
+        y = F.linear(y, block.attn.out_proj.weight, block.attn.out_proj.bias)
+        q, k, v = y.tensor_split(3, dim=0)
+        v += x
+        v += block.mlp(block.ln_2(v))
+        return v
+
+
+    @staticmethod
+    def resize_pos_embed(pos_embed, input_shpae, pos_shape, mode):
+        """Resize pos_embed weights.
+
+        Resize pos_embed using bicubic interpolate method.
+        Args:
+            pos_embed (torch.Tensor): Position embedding weights.
+            input_shpae (tuple): Tuple for (downsampled input image height,
+                downsampled input image width).
+            pos_shape (tuple): The resolution of downsampled origin training
+                image.
+            mode (str): Algorithm used for upsampling:
+                ``'nearest'`` | ``'linear'`` | ``'bilinear'`` | ``'bicubic'`` |
+                ``'trilinear'``. Default: ``'nearest'``
+        Return:
+            torch.Tensor: The resized pos_embed of shape [B, L_new, C]
+        """
+        assert pos_embed.ndim == 3, 'shape of pos_embed must be [B, L, C]'
+        pos_h, pos_w = pos_shape
+        cls_token_weight = pos_embed[:, 0]
+        pos_embed_weight = pos_embed[:, (-1 * pos_h * pos_w):]
+        pos_embed_weight = pos_embed_weight.reshape(
+            1, pos_h, pos_w, pos_embed.shape[2]).permute(0, 3, 1, 2)
+        pos_embed_weight = resize(
+            pos_embed_weight, size=input_shpae, align_corners=False, mode=mode)
+        cls_token_weight = cls_token_weight.unsqueeze(1)
+        pos_embed_weight = torch.flatten(pos_embed_weight, 2).transpose(1, 2)
+        pos_embed = torch.cat((cls_token_weight, pos_embed_weight), dim=1)
+        return pos_embed
 
     def forward(self, inputs: Tensor, return_feat=False) -> Tensor:
         """Encode images with backbone and decode into a semantic segmentation
         map of the same size as input."""
         inputs = self.clip_T(inputs)
         x = self.extract_feat(inputs)
-
-        seg_logits, feats, k = self.decode_head(x, return_feat)
-
         if return_feat:
-            return seg_logits, feats, k
+            seg_logits, feats = self.decode_head(x, return_feat)
+            return seg_logits, feats
+        else:
+            seg_logits = self.decode_head(x)
         return seg_logits
 
 class MaskClipHead(nn.Module):
-    def __init__(self, clip_model, class_names, visual_projs_path=None, in_index=-1, in_channels=3, norm_cfg=None, channels=0,
-                 text_channels=512, attn_pooling=False, align_corners=False, model_prefix='hf-hub:laion', use_templates=False, **kwargs):
+    def __init__(self, clip_model, class_names, in_channels=3, text_channels=512, use_templates=False, pretrained=None,
+                 **kwargs):
         super(MaskClipHead, self).__init__()
 
         self.text_channels = text_channels
-        self.visual_projs_path = visual_projs_path
         self.clip_model = clip_model
+        self.pretrained = pretrained
         self.class_names = class_names
         self.in_channels = in_channels
-        self.in_index = in_index # from base decode head default
-        self._init_inputs(in_channels, in_index, None)
-        self.channels = channels
-        self.norm_cfg = norm_cfg
-        self.align_corners = align_corners
         self.use_templates = use_templates
-
-        self.proj = nn.Conv2d(self.in_channels, text_channels, 1, bias=False)
-        self.load_visual_projs()
-
-        self.attn_pooling = attn_pooling
-        self.tokenizer = get_tokenizer(f'{model_prefix}/{clip_model}')
-        self.hf_modelname = f'{model_prefix}/{clip_model}'
-        model, _ = create_model_from_pretrained(f'{model_prefix}/{clip_model}')
+        self.tokenizer = get_tokenizer(clip_model)
+        model, _ = create_model_from_pretrained(clip_model, pretrained=pretrained)
         model.eval()
         self.register_buffer("class_embeddings", self._get_class_embeddings(model, class_names))
+        self.proj = nn.Conv2d(self.in_channels, text_channels, 1, bias=False)
+        self.proj.weight = nn.Parameter(model.visual.proj.t()[:, :, None, None])
 
     @torch.no_grad()
     def update_vocab(self, class_names):
-        model, _ = create_model_from_pretrained(self.hf_modelname)
+        model, _ = create_model_from_pretrained(self.clip_model, pretrained=self.pretrained )
         model.eval()
         self.class_embeddings = self._get_class_embeddings(model, class_names)
 
@@ -105,9 +160,10 @@ class MaskClipHead(nn.Module):
         """
         if self.use_templates:
             templates = imagenet_templates
+        elif "laion" in self.pretrained:
+            templates = ['a photo of a {}', 'a photo of an {}']
         else:
-            templates = ['a photo of an {}' if label.startswith('aeiou') else 'a photo of a {}']
-
+            templates = ['a {}']
         all_prompts = [self.tokenizer(template.format(label)) for template in templates]
         out = text_model.encode_text(torch.cat(all_prompts))
         out /= out.norm(dim=-1, keepdim=True)
@@ -120,102 +176,16 @@ class MaskClipHead(nn.Module):
         aug_embeddings = aug_embeddings / aug_embeddings.norm(dim=-1, keepdim=True)
         return aug_embeddings.squeeze(1)
 
-    def load_visual_projs(self):
-        loaded = torch.load(self.visual_projs_path, map_location='cuda')
-        attrs = ['proj']
-        for attr in attrs:
-            current_attr = getattr(self, attr)
-            state_dict = loaded[attr]
-            for key in state_dict:
-                if 'weight' in key:
-                    state_dict[key] = state_dict[key][:, :, None, None]
-            current_attr.load_state_dict(state_dict)
-        print_log(f'Loaded proj weights from {self.visual_projs_path}', logger=get_root_logger())
-
     def forward(self, inputs, return_feat=False):
-        x = self._transform_inputs(inputs)
-        q, k, v, cls_token = None, None, None, None
-        if isinstance(x, list) and len(x) == 4:
-            x, q, k, v = x
-        if isinstance(x, list) and len(x) == 2:
-            x, cls_token = x
-        if v is not None:
-            feat = self.proj(v)
-        else:
-            feat = self.proj(x)
+        v = inputs
+        feat = self.proj(v)
         output = self.cls_seg(feat)
         if return_feat:
-            return output, feat, k
-
+            return output, feat
         return output
-
-    def _init_inputs(self, in_channels, in_index, input_transform):
-        """Check and initialize input transforms.
-
-        The in_channels, in_index and input_transform must match.
-        Specifically, when input_transform is None, only single feature map
-        will be selected. So in_channels and in_index must be of type int.
-        When input_transform
-
-        Args:
-            in_channels (int|Sequence[int]): Input channels.
-            in_index (int|Sequence[int]): Input feature index.
-            input_transform (str|None): Transformation type of input features.
-                Options: 'resize_concat', 'multiple_select', None.
-                'resize_concat': Multiple feature maps will be resize to the
-                    same size as first one and than concat together.
-                    Usually used in FCN head of HRNet.
-                'multiple_select': Multiple feature maps will be bundle into
-                    a list and passed into decode head.
-                None: Only one select feature map is allowed.
-        """
-
-        if input_transform is not None:
-            assert input_transform in ['resize_concat', 'multiple_select']
-        self.input_transform = input_transform
-        self.in_index = in_index
-        if input_transform is not None:
-            assert isinstance(in_channels, (list, tuple))
-            assert isinstance(in_index, (list, tuple))
-            assert len(in_channels) == len(in_index)
-            if input_transform == 'resize_concat':
-                self.in_channels = sum(in_channels)
-            else:
-                self.in_channels = in_channels
-        else:
-            assert isinstance(in_channels, int)
-            assert isinstance(in_index, int)
-            self.in_channels = in_channels
 
     def cls_seg(self, feat):
         feat = feat / feat.norm(dim=1, keepdim=True)
         output = F.conv2d(feat, self.class_embeddings[:, :, None, None])
-        output = F.softmax(output * 100, dim=1) # softmax of similarities with temp scaling
-
+        output = F.softmax(output * 100, dim=1)
         return output
-
-    def _transform_inputs(self, inputs):
-        """Transform inputs for decoder.
-
-        Args:
-            inputs (list[Tensor]): List of multi-level img features.
-
-        Returns:
-            Tensor: The transformed inputs
-        """
-        if self.input_transform == 'resize_concat':
-            inputs = [inputs[i] for i in self.in_index]
-            upsampled_inputs = [
-                resize(
-                    input=x,
-                    size=inputs[0].shape[2:],
-                    mode='bilinear',
-                    align_corners=self.align_corners) for x in inputs
-            ]
-            inputs = torch.cat(upsampled_inputs, dim=1)
-        elif self.input_transform == 'multiple_select':
-            inputs = [inputs[i] for i in self.in_index]
-        else:
-            inputs = inputs[self.in_index]
-
-        return inputs

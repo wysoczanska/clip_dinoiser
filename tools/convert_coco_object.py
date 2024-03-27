@@ -1,8 +1,3 @@
-# ------------------------------------------------------------------------------
-# GroupViT (https://github.com/NVlabs/GroupViT)
-# Copyright (c) 2021-22, NVIDIA Corporation & affiliates. All Rights Reserved.
-# ------------------------------------------------------------------------------
-
 import argparse
 import os.path as osp
 import shutil

@@ -1,12 +1,4 @@
-# ---------------------------------------------------------------------------------------------------
-# CLIP-DINOiser
-# authors: Monika Wysoczanska, Warsaw University of Technology
-# ----------------------------------------------------------------------------------------------------
-# Modified from TCL
-# Copyright (c) 2023 Kakao Brain. All Rights Reserved.
-# ------------------------------------------------------------------------------
 _base_ = ["../custom_import.py"]
-# dataset settings
 dataset_type = "COCOObjectDataset"
 data_root = "./data/coco_stuff164k"
 

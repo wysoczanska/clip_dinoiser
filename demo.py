@@ -10,13 +10,14 @@ from operator import itemgetter
 import torch
 from segmentation.datasets.pascal_context import PascalContextDataset
 import argparse
-from utils.visualization import mask2rgb
+from helpers.visualization import mask2rgb
+from typing import List
 
 initialize(config_path="configs", version_base=None)
 PALETTE = list(PascalContextDataset.PALETTE)
 
 
-def visualize_per_image(file_path: str, TEXT_PROMPTS: list[str], model: torch.nn.Module, device: str, output_dir: str,
+def visualize_per_image(file_path: str, TEXT_PROMPTS: List[str], model: torch.nn.Module, device: str, output_dir: str,
                         ):
     """
     Visualizes output segmentation mask and saves it alongside with the labels in a file in a given output directory.
@@ -37,7 +38,7 @@ def visualize_per_image(file_path: str, TEXT_PROMPTS: list[str], model: torch.nn
     name = file_path.split('.')[0]
 
     output = model(img_tens).cpu()
-    output = F.interpolate(output, scale_factor=model.clip_backbone.backbone.patch_size, mode="bilinear",
+    output = F.interpolate(output, scale_factor=model.vit_patch_size, mode="bilinear",
                            align_corners=False)[..., :h, :w]
     output = output[0].argmax(dim=0)
     mask = mask2rgb(output, PALETTE)
@@ -62,7 +63,7 @@ def parse_args():
         description='CLIP-DINOiser demo')
     parser.add_argument('--cfg', help='config file name', default='clip_dinoiser.yaml')
     parser.add_argument('--prompts', help='List of textual prompts', required=True, type=list_of_strings)
-    parser.add_argument('--checkpoint_path', help='Path to the checkpoint file', default='checkpoints/last.pt')
+    parser.add_argument('--checkpoint_path', help='Path to the checkpoint file', default='./checkpoints/last.pt')
     parser.add_argument('--output_dir', help='Directory to save the output', default='.', required=False)
     parser.add_argument('--file_path', help='Path to the image file', required=True)
 
@@ -82,18 +83,19 @@ if __name__ == '__main__':
         print("Please provide your prompts in the correct format")
     else:
         if len(args.prompts) == 1:
-            prompts = ['background'] +  args.prompts
+            prompts = ['background'] + args.prompts
         model = build_model(cfg.model, class_names=prompts)
-        model.clip_backbone.decode_head.use_templates = False # switch off the image net templates for fast inference
 
         assert os.path.isfile(args.checkpoint_path), "Checkpoint file doesn't exist"
         checkpoint = torch.load(args.checkpoint_path, map_location='cpu')
+        model.load_state_dict(checkpoint['model_state_dict'], strict=False)
 
         model.eval()
         model.to(device)
-        model.load_state_dict(checkpoint['model_state_dict'], strict=False)
         if 'background' in prompts:
             model.apply_found = True
+        else:
+            model.apply_found = False
         print(args.prompts)
         os.path.exists(args.output_dir)
 

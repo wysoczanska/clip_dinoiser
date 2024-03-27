@@ -1,6 +1,37 @@
+# ---------------------------------------------------------------------------------------------------
+# CLIP-DINOiser
+# authors: Monika Wysoczanska, Warsaw University of Technology & Oriane Simeoni, valeo.ai
+# ---------------------------------------------------------------------------------------------------
+
+from typing import Optional
+
+import cv2
+import numpy as np
+from mmengine.registry import init_default_scope
 from mmseg.datasets.builder import PIPELINES
 from mmseg.datasets.pipelines import ImageToTensor, to_tensor
-import numpy as np
+
+init_default_scope('mmseg')
+
+
+@PIPELINES.register_module()
+class ToRGB:
+    def __call__(self, results):
+        return self.transform(results)
+
+    def transform(self, results: dict) -> Optional[dict]:
+        """Functions to go from BGR to RGB.
+
+        Args:
+            results (dict): Result dict from
+                :class:`mmengine.dataset.BaseDataset`.
+
+        Returns:
+            dict: The dict contains loaded image and meta information.
+        """
+
+        results['img'] = cv2.cvtColor(results['img'], cv2.COLOR_BGR2RGB)
+        return results
 
 
 # ________________

@@ -1,1 +1,1 @@
-from .transforms import ToRGB, ImageToTensorV2
+from .transforms import ToRGB

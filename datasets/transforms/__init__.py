@@ -1,4 +1,3 @@
-from .loading import ToRGB
-from .transforms import ImageToTensorV2
+from .transforms import ImageToTensorV2, ToRGB
 
 __all__ = ['ToRGB', 'ImageToTensorV2']

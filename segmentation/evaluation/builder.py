@@ -1,16 +1,10 @@
-# ---------------------------------------------------------------------------------------------------
-# CLIP-DINOiser
-# authors: Monika Wysoczanska, Warsaw University of Technology
-# ---------------------------------------------------------------------------------------------------
-# modified from TCL
-# Copyright (c) 2023 Kakao Brain. All Rights Reserved.
-# ---------------------------------------------------------------------------------------------------
-
 import mmcv
-from mmseg.datasets import build_dataloader, build_dataset
-from mmcv.utils import Registry
 from mmcv.cnn import MODELS as MMCV_MODELS
+from mmcv.utils import Registry
+from mmseg.datasets import build_dataloader, build_dataset
+
 MODELS = Registry('models', parent=MMCV_MODELS)
+
 SEGMENTORS = MODELS
 from .clip_dinoiser_eval import DinoCLIP_Infrencer
 
@@ -38,20 +32,21 @@ def build_seg_dataloader(dataset, dist=True):
         data_loader = build_dataloader(
             dataset=dataset,
             samples_per_gpu=1,
-            workers_per_gpu=2,
+            workers_per_gpu=1,
             dist=dist,
             shuffle=False,
             persistent_workers=True,
             pin_memory=False,
         )
+
     return data_loader
 
 
 def build_seg_inference(
-    model,
-    dataset,
-    config,
-    seg_config,
+        model,
+        dataset,
+        config,
+        seg_config,
 ):
     dset_cfg = mmcv.Config.fromfile(seg_config)  # dataset config
     classnames = dataset.CLASSES

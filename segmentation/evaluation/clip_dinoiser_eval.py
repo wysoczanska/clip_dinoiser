@@ -1,17 +1,20 @@
 # ------------------------------------------------------------------------------
-import torch
 import logging
+
+import torch
+
 log = logging.getLogger(__name__)
 from mmseg.ops import resize
 from mmseg.models import EncoderDecoder
 
+
 class DinoCLIP_Infrencer(EncoderDecoder):
     def __init__(
-        self,
-        model,
-        num_classes,
-        test_cfg=dict(),
-        **kwargs,
+            self,
+            model,
+            num_classes,
+            test_cfg=dict(),
+            **kwargs,
     ):
         super(EncoderDecoder, self).__init__()
         self.mode = test_cfg['mode']
@@ -31,4 +34,3 @@ class DinoCLIP_Infrencer(EncoderDecoder):
             mode='bilinear',
             align_corners=self.align_corners)
         return masks
-
