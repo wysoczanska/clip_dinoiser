@@ -33,7 +33,7 @@ Official PyTorch implementation of [**CLIP-DINOiser: Teaching CLIP a few DINO tr
 
 ```
 @article{wysoczanska2023clipdino,
-        title={CLIP-DINOiser: Teaching CLIP a few DINO tricks},
+        title={CLIP-DINOiser: Teaching CLIP a few DINO tricks for open-vocabulary semantic segmentation},
         author={Wysocza{\'n}ska, Monika and Sim{\'e}oni, Oriane and Ramamonjisoa, Micha{\"e}l and Bursuc, Andrei and Trzci{\'n}ski, Tomasz and P{\'e}rez, Patrick},
         journal={arxiv},
         year={2023}
@@ -136,7 +136,7 @@ To run the training simply run:
 ```
 CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=auto train.py clip_dinoiser.yaml
 ```
-Currently, we only support single gpu training. However, the evaluation (which is automatically run after the training finishes) can still be speed up with multiple gpu process.
+Currently, we only support single gpu training.
 
 ## Acknowledgments
 This repo heavily relies on the following projects: 
