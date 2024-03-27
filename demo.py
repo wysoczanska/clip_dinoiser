@@ -83,7 +83,7 @@ if __name__ == '__main__':
         print("Please provide your prompts in the correct format")
     else:
         if len(args.prompts) == 1:
-            prompts = ['background'] +  args.prompts
+            prompts = ['background'] + args.prompts
         model = build_model(cfg.model, class_names=prompts)
 
         assert os.path.isfile(args.checkpoint_path), "Checkpoint file doesn't exist"
