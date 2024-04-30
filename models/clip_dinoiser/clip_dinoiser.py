@@ -34,9 +34,6 @@ class DinoCLIP(nn.Module):
         self.vit_patch_size = vit_patch_size
         self.apply_found = apply_found
         self.delta = delta
-        self.vit_arch = vit_arch
-        self.vit_patch_size = vit_patch_size
-        self.enc_type_feats = enc_type_feats
 
         # ==== build MaskCLIP backbone =====
         maskclip_cfg = OmegaConf.load(f"configs/{clip_backbone}.yaml")
