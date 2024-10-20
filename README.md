@@ -66,7 +66,7 @@ You will also need to install MMCV and MMSegmentation by running:
 pip install -U openmim
 mim install mmengine    
 mim install "mmcv-full==1.6.0"
-mim install "mmsegmentation==0.27.0
+mim install "mmsegmentation==0.27.0"
 ```
 
 ### Running from the notebook
