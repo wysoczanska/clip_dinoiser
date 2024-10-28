@@ -14,11 +14,13 @@ from omegaconf import OmegaConf
 
 from models.builder import MODELS, build_model
 
+from huggingface_hub import PyTorchModelHubMixin
+
 NORMALIZE = T.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 
 
 @MODELS.register_module()
-class DinoCLIP(nn.Module):
+class DinoCLIP(nn.Module, PyTorchModelHubMixin, repo_url="https://github.com/wysoczanska/clip_dinoiser", pipeline_tag="image-segmentation"):
     """
     Base model for all the backbones. Implements CLIP features refinement based on DINO dense features and background
     refinement using FOUND model.
