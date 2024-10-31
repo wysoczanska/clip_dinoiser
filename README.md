@@ -56,7 +56,13 @@ Set up the environment:
 # Create conda environment
 conda create -n clipdino python=3.9
 conda activate clipdino
+conda install numpy
+# for NVIDIA PCs
 conda install pytorch==1.12.1 torchvision==0.13.1 cudatoolkit=[your CUDA version] -c pytorch
+# for MacOs Intel/PC without NVIDIA
+conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
+# for MacOs Apple Silicon
+conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch -c apple
 pip install -r requirements.txt
 ```
 
